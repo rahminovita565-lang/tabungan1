@@ -24,7 +24,7 @@ body.dark-mode #toggleMode{background:#333;color:#fff;}
 .container{max-width:1000px;margin:30px auto;padding:0 15px;}
 .card{background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 5px 20px rgba(0,0,0,0.1);transition: background .3s,color .3s;}
 body.dark-mode .card{background:#1f1f1f;}
-.card h2{margin-bottom:15px;color:#333;}
+.card h2{margin-bottom:15px;color:#333;font-size:1.2em;}
 .card label{display:block;margin:10px 0 5px;font-weight:bold;}
 .card input,.card select,.card button{width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;margin-bottom:10px;}
 .card button{background:linear-gradient(45deg,#4CAF50,#81C784);color:white;font-weight:bold;border:none;cursor:pointer;transition:0.3s;}
@@ -47,6 +47,8 @@ body.dark-mode tr:hover{background:#333;}
 @keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
 canvas{margin-top:20px;background:#fff;border-radius:12px;padding:20px;}
 body.dark-mode canvas{background:#1f1f1f;}
+.receipt-img{width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer;transition:.2s;}
+.receipt-img:hover{transform:scale(1.1);}
 </style>
 </head>
 <body>
@@ -64,19 +66,20 @@ body.dark-mode canvas{background:#1f1f1f;}
 <!-- Dashboard -->
 <div id="app" style="display:none;">
 <header>
-    <h1>Tabungan, Pemasukan & Pengeluaran Bulanan</h1>
+    <h1>Tabungan & Transaksi Bulanan</h1>
     <button id="toggleMode" onclick="toggleDarkMode()">Mode Gelap</button>
 </header>
 
 <div class="container">
     <!-- Input -->
     <div class="card">
-        <h2>Tambah Transaksi</h2>
+        <h2>Transaksi Baru</h2>
+        <input type="hidden" id="editIndex">
         <label for="date">Tanggal:</label>
         <input type="date" id="date">
 
         <label for="type">Jenis:</label>
-        <select id="type" onchange="showNoteField()">
+        <select id="type" onchange="showNoteAndImageField()">
             <option value="pemasukan">Pemasukan</option>
             <option value="tabungan">Tabungan</option>
             <option value="pengeluaran">Pengeluaran</option>
@@ -85,19 +88,32 @@ body.dark-mode canvas{background:#1f1f1f;}
         <label for="amount">Jumlah (Rp):</label>
         <input type="number" id="amount" placeholder="Masukkan jumlah">
 
-        <label for="note" id="noteLabel" style="display:none;">Catatan:</label>
-        <input type="text" id="note" placeholder="Catatan pengeluaran" style="display:none;">
+        <label for="note" id="noteLabel">Catatan:</label>
+        <input type="text" id="note" placeholder="Catatan transaksi">
 
-        <button onclick="addTransaction()">Tambah</button>
+        <label for="receipt" id="receiptLabel" style="display:none;">Bukti (Gambar):</label>
+        <input type="file" id="receipt" accept="image/*" style="display:none;">
+
+        <button onclick="saveTransaction()">Simpan</button>
     </div>
 
     <!-- Filter -->
     <div class="card">
-        <h2>Filter Bulan</h2>
-        <label for="filterMonth">Pilih Bulan:</label>
-        <input type="month" id="filterMonth">
-        <button onclick="applyFilter()">Terapkan Filter</button>
+        <h2>Filter</h2>
+        <label for="startDate">Mulai:</label>
+        <input type="date" id="startDate">
+        <label for="endDate">Sampai:</label>
+        <input type="date" id="endDate">
+        <label for="typeFilter">Jenis:</label>
+        <select id="typeFilter">
+            <option value="">Semua</option>
+            <option value="pemasukan">Pemasukan</option>
+            <option value="tabungan">Tabungan</option>
+            <option value="pengeluaran">Pengeluaran</option>
+        </select>
+        <button onclick="applyFilter()">Terapkan</button>
         <button onclick="exportCSV()">Export CSV</button>
+        <button onclick="exportJSON()">Export JSON</button>
     </div>
 
     <!-- Summary -->
@@ -110,10 +126,17 @@ body.dark-mode canvas{background:#1f1f1f;}
 
     <!-- Table -->
     <div class="card">
-        <h2>Riwayat Bulanan</h2>
+        <h2>Riwayat</h2>
         <table>
             <thead>
-                <tr><th>Tanggal</th><th>Jenis</th><th>Jumlah (Rp)</th><th>Catatan</th></tr>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Jenis</th>
+                    <th>Jumlah</th>
+                    <th>Catatan</th>
+                    <th>Bukti</th>
+                    <th>Aksi</th>
+                </tr>
             </thead>
             <tbody id="transactionTable"></tbody>
         </table>
@@ -121,157 +144,180 @@ body.dark-mode canvas{background:#1f1f1f;}
 
     <!-- Chart -->
     <div class="card">
-        <h2>Grafik Bulanan</h2>
+        <h2>Grafik Saldo</h2>
         <canvas id="myChart" width="400" height="200"></canvas>
     </div>
 </div>
 </div>
 
 <script>
-window.onload = function() {
-    let transactions = [];
-    let filteredTransactions = [];
-    let chart;
+window.onload=function(){
+    let transactions=[],filteredTransactions=[],chart;
 
-    // Load data dari localStorage
-    const savedTransactions = localStorage.getItem('transactions');
-    if(savedTransactions) transactions = JSON.parse(savedTransactions);
+    if(localStorage.getItem('transactions')) transactions=JSON.parse(localStorage.getItem('transactions'));
 
     // Login
-    window.login = function() {
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        if(username==='admin' && password==='1234'){
+    window.login=function(){
+        const u=document.getElementById('username').value;
+        const p=document.getElementById('password').value;
+        if(u==='admin' && p==='1234'){
             document.getElementById('loginPage').style.display='none';
             document.getElementById('app').style.display='block';
-            applyFilter(); // tampilkan data saat login
-        } else alert('Username atau password salah!');
+            applyFilter();
+        }else alert('Username atau password salah!');
     }
 
-    // Show/Hide Catatan
-    window.showNoteField = function(){
-        const type = document.getElementById('type').value;
-        const noteInput = document.getElementById('note');
-        const noteLabel = document.getElementById('noteLabel');
-        if(type==='pengeluaran'){
-            noteInput.style.display='block';
-            noteLabel.style.display='block';
-        } else {
-            noteInput.style.display='none';
-            noteLabel.style.display='none';
+    // Show/hide receipt
+    window.showNoteAndImageField=function(){
+        const t=document.getElementById('type').value;
+        const r=document.getElementById('receipt');
+        const rl=document.getElementById('receiptLabel');
+        if(t==='pengeluaran'){r.style.display='block'; rl.style.display='block';}
+        else{r.style.display='none'; rl.style.display='none'; r.value='';}
+    }
+
+    // Save transaction
+    window.saveTransaction=function(){
+        const date=document.getElementById('date').value;
+        const type=document.getElementById('type').value;
+        const amount=Number(document.getElementById('amount').value);
+        const note=document.getElementById('note').value;
+        const receipt=document.getElementById('receipt').files[0]?URL.createObjectURL(document.getElementById('receipt').files[0]):'';
+
+        if(!date || !amount){alert('Tanggal dan jumlah wajib diisi!'); return;}
+        const editIndex=document.getElementById('editIndex').value;
+
+        if(editIndex===''){transactions.push({date,type,amount,note,receipt});}
+        else{
+            transactions[editIndex]={date,type,amount,note,receipt};
+            document.getElementById('editIndex').value='';
+        }
+        localStorage.setItem('transactions',JSON.stringify(transactions));
+        clearForm();
+        applyFilter();
+    }
+
+    function clearForm(){
+        document.getElementById('date').value='';
+        document.getElementById('type').value='pemasukan';
+        document.getElementById('amount').value='';
+        document.getElementById('note').value='';
+        document.getElementById('receipt').value='';
+        showNoteAndImageField();
+    }
+
+    // Edit/Delete
+    window.editTransaction=function(index){
+        const t=filteredTransactions[index];
+        document.getElementById('date').value=t.date;
+        document.getElementById('type').value=t.type;
+        document.getElementById('amount').value=t.amount;
+        document.getElementById('note').value=t.note;
+        document.getElementById('editIndex').value=transactions.indexOf(t);
+        showNoteAndImageField();
+    }
+
+    window.deleteTransaction=function(index){
+        if(confirm('Hapus transaksi ini?')){
+            const t=filteredTransactions[index];
+            transactions.splice(transactions.indexOf(t),1);
+            localStorage.setItem('transactions',JSON.stringify(transactions));
+            applyFilter();
         }
     }
 
-    // Tambah transaksi
-    window.addTransaction = function(){
-        const date = document.getElementById('date').value;
-        const type = document.getElementById('type').value;
-        const amount = parseInt(document.getElementById('amount').value);
-        const note = document.getElementById('note').value;
-        if(!date || !amount || isNaN(amount) || amount<=0){ alert('Tanggal dan jumlah harus valid!'); return;}
+    // Filter
+    window.applyFilter=function(){
+        const start=document.getElementById('startDate').value;
+        const end=document.getElementById('endDate').value;
+        const typeFilter=document.getElementById('typeFilter').value;
 
-        transactions.push({date,type,amount,note:type==='pengeluaran'?note:''});
-        localStorage.setItem('transactions', JSON.stringify(transactions)); // simpan permanen
-        applyFilter();
-
-        document.getElementById('date').value='';
-        document.getElementById('amount').value='';
-        document.getElementById('note').value='';
-        document.getElementById('note').style.display='none';
-        document.getElementById('noteLabel').style.display='none';
+        filteredTransactions=transactions.filter(t=>{
+            if(start && t.date<start) return false;
+            if(end && t.date>end) return false;
+            if(typeFilter && t.type!==typeFilter) return false;
+            return true;
+        });
+        renderTable();
+        updateSummary();
+        updateChart();
     }
 
-    // Update Table
-    function updateTable(list){
-        const table = document.getElementById('transactionTable');
-        table.innerHTML='';
-        list.forEach(trx=>{
-            const row = document.createElement('tr');
-            row.classList.add('fade-in');
-            row.innerHTML=`<td>${trx.date}</td><td>${trx.type.charAt(0).toUpperCase()+trx.type.slice(1)}</td><td>${trx.amount.toLocaleString()}</td><td>${trx.note||''}</td>`;
-            table.appendChild(row);
+    function renderTable(){
+        const tbody=document.getElementById('transactionTable');
+        tbody.innerHTML='';
+        filteredTransactions.forEach((t,i)=>{
+            const tr=document.createElement('tr');
+            tr.innerHTML=`
+                <td>${t.date}</td>
+                <td>${t.type}</td>
+                <td>Rp ${t.amount.toLocaleString()}</td>
+                <td>${t.note}</td>
+                <td>${t.receipt?`<img src="${t.receipt}" class="receipt-img" onclick="window.open('${t.receipt}','_blank')">`:'-'}</td>
+                <td>
+                    <button onclick="editTransaction(${i})">Edit</button>
+                    <button onclick="deleteTransaction(${i})">Hapus</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
         });
     }
 
-    // Update Summary
-    function updateSummary(list){
+    function updateSummary(){
         let income=0,saving=0,expense=0;
-        list.forEach(trx=>{
-            if(trx.type==='pemasukan') income+=trx.amount;
-            else if(trx.type==='tabungan') saving+=trx.amount;
-            else if(trx.type==='pengeluaran') expense+=trx.amount;
+        filteredTransactions.forEach(t=>{
+            if(t.type==='pemasukan') income+=t.amount;
+            else if(t.type==='tabungan') saving+=t.amount;
+            else if(t.type==='pengeluaran') expense+=t.amount;
         });
-        document.getElementById('totalIncome').innerText='Total Pemasukan: Rp '+income.toLocaleString();
-        document.getElementById('totalSaving').innerText='Total Tabungan: Rp '+saving.toLocaleString();
-        document.getElementById('totalExpense').innerText='Total Pengeluaran: Rp '+expense.toLocaleString();
-        const balance = income - saving - expense;
-        document.getElementById('balance').innerText='Saldo Akhir: Rp '+balance.toLocaleString();
+        document.getElementById('totalIncome').innerText=`Total Pemasukan: Rp ${income.toLocaleString()}`;
+        document.getElementById('totalSaving').innerText=`Total Tabungan: Rp ${saving.toLocaleString()}`;
+        document.getElementById('totalExpense').innerText=`Total Pengeluaran: Rp ${expense.toLocaleString()}`;
+        const balance=income - saving - expense;
+        document.getElementById('balance').innerText=`Saldo Akhir: Rp ${balance.toLocaleString()}`;
     }
 
-    // Update Chart
-    function updateChart(list){
-        const labels=[], incomeData=[], savingData=[], expenseData=[], balanceData=[];
-        const grouped={};
-        list.forEach(trx=>{
-            if(!grouped[trx.date]) grouped[trx.date]={income:0,saving:0,expense:0};
-            if(trx.type==='pemasukan') grouped[trx.date].income+=trx.amount;
-            else if(trx.type==='tabungan') grouped[trx.date].saving+=trx.amount;
-            else grouped[trx.date].expense+=trx.amount;
-        });
-        let cumulativeBalance=0;
-        Object.keys(grouped).sort().forEach(date=>{
-            labels.push(date);
-            incomeData.push(grouped[date].income);
-            savingData.push(grouped[date].saving);
-            expenseData.push(grouped[date].expense);
-            cumulativeBalance += grouped[date].income - grouped[date].saving - grouped[date].expense;
-            balanceData.push(cumulativeBalance);
+    // Chart
+    function updateChart(){
+        const labels=filteredTransactions.map(t=>t.date);
+        const data=filteredTransactions.map(t=>{
+            if(t.type==='pemasukan') return t.amount;
+            else if(t.type==='tabungan') return -t.amount;
+            else return -t.amount;
         });
         if(chart) chart.destroy();
-        chart = new Chart(document.getElementById('myChart'),{
+        const ctx=document.getElementById('myChart').getContext('2d');
+        chart=new Chart(ctx,{
             type:'line',
-            data:{
-                labels:labels,
-                datasets:[
-                    {label:'Pemasukan',data:incomeData,borderColor:'green',fill:false,tension:0.2},
-                    {label:'Tabungan',data:savingData,borderColor:'orange',fill:false,tension:0.2},
-                    {label:'Pengeluaran',data:expenseData,borderColor:'red',fill:false,tension:0.2},
-                    {label:'Saldo',data:balanceData,borderColor:'blue',fill:false,tension:0.2}
-                ]
-            },
-            options:{responsive:true,plugins:{legend:{position:'top'}}}
+            data:{labels, datasets:[{label:'Saldo',data,cubicInterpolationMode:'monotone',borderColor:'#4CAF50',backgroundColor:'rgba(76,175,80,0.2)',fill:true}]},
+            options:{responsive:true,plugins:{legend:{display:false}}}
         });
-    }
-
-    // Filter Bulanan
-    window.applyFilter = function(){
-        const month = document.getElementById('filterMonth').value;
-        if(month){
-            filteredTransactions = transactions.filter(trx=> trx.date.startsWith(month));
-        } else filteredTransactions = [...transactions];
-        updateTable(filteredTransactions);
-        updateSummary(filteredTransactions);
-        updateChart(filteredTransactions);
-    }
-
-    // Export CSV
-    window.exportCSV = function(){
-        let csv='Tanggal,Jenis,Jumlah,Catatan\n';
-        filteredTransactions.forEach(trx=>{
-            csv+=`${trx.date},${trx.type},${trx.amount},${trx.note||''}\n`;
-        });
-        const blob = new Blob([csv],{type:'text/csv'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href=url;
-        a.download='transaksi.csv';
-        a.click();
-        URL.revokeObjectURL(url);
     }
 
     // Dark mode
-    window.toggleDarkMode = function(){
+    window.toggleDarkMode=function(){
         document.body.classList.toggle('dark-mode');
+    }
+
+    // Export
+    window.exportCSV=function(){
+        let csv='Tanggal,Jenis,Jumlah,Catatan\\n';
+        filteredTransactions.forEach(t=>{
+            csv+=`${t.date},${t.type},${t.amount},${t.note}\\n`;
+        });
+        const blob=new Blob([csv],{type:'text/csv'});
+        const link=document.createElement('a');
+        link.href=URL.createObjectURL(blob);
+        link.download='transaksi.csv';
+        link.click();
+    }
+
+    window.exportJSON=function(){
+        const blob=new Blob([JSON.stringify(filteredTransactions, null, 2)],{type:'application/json'});
+        const link=document.createElement('a');
+        link.href=URL.createObjectURL(blob);
+        link.download='transaksi.json';
+        link.click();
     }
 }
 </script>
