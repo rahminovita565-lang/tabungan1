@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tabungan, Pemasukan & Pengeluaran</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', sans-serif;}
+body { background:#f0f2f5; transition:0.3s; }
+body.dark-mode { background:#121212; color:#e0e0e0; }
+body.dark-mode .card { background:#1f1f1f; color:#e0e0e0; }
+body.dark-mode table th { background:#2c2c2c; }
+
+/* Login */
+#loginPage { display:flex; justify-content:center; align-items:center; height:100vh; position:relative; }
+#loginPage::before { content:''; position:absolute; width:100%;height:100%; background:url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?fit=crop&w=1350&q=80') center/cover no-repeat; filter:blur(8px) brightness(0.6); z-index:0; }
+#loginBox { position:relative; z-index:1; background: rgba(255,255,255,0.9); padding:40px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.2);}
+#loginBox input{width:100%; margin-bottom:15px; padding:12px; border-radius:8px; border:1px solid #ccc;}
+#loginBox button{width:100%; padding:12px; border-radius:8px; border:none; background:linear-gradient(45deg,#4CAF50,#81C784); color:white; font-weight:bold; cursor:pointer; transition:0.3s;}
+#loginBox button:hover{background:linear-gradient(45deg,#388E3C,#66BB6A);}
+
+/* Header */
+header{background:#4CAF50; color:white; padding:20px; text-align:center; position:relative;}
+body.dark-mode header{background:#1f1f1f; color:#e0e0e0;}
+#toggleMode{position:absolute; right:20px; top:20px; padding:6px 12px; font-size:0.9em; background:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:bold; transition:0.3s;}
+body.dark-mode #toggleMode{background:#333; color:#fff;}
+
+/* Container & Card */
+.container{max-width:1000px; margin:30px auto; padding:0 15px;}
+.card{background:white; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 5px 20px rgba(0,0,0,0.1); transition: background 0.3s,color 0.3s;}
+body.dark-mode .card{background:#1f1f1f;}
+.card h2{margin-bottom:15px; color:#333;}
+.card label{display:block; margin:10px 0 5px; font-weight:bold;}
+.card input, .card select, .card button{width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; margin-bottom:10px;}
+.card button{background:linear-gradient(45deg,#4CAF50,#81C784); color:white; font-weight:bold; border:none; cursor:pointer; transition:0.3s;}
+.card button:hover{background:linear-gradient(45deg,#388E3C,#66BB6A);}
+
+/* Summary */
+.summary-container{display:flex; gap:20px; flex-wrap:wrap; margin-top:20px;}
+.summary-card{flex:1; min-width:200px; padding:20px; border-radius:12px; text-align:center; font-weight:bold; color:#2e7d32; background:#e8f5e9; box-shadow:0 5px 15px rgba(0,0,0,0.1); transition:0.3s;}
+.summary-card.income{background:#e8f5e9; color:#2e7d32;}
+.summary-card.expense{background:#ffebee; color:#c62828;}
+.summary-card.saving{background:#fff3e0; color:#ef6c00;}
+.summary-card.balance{background:#e3f2fd; color:#1565c0;}
+body.dark-mode .summary-card{background:#2c2c2c; color:#e0e0e0;}
+
+/* Table */
+table{width:100%; border-collapse:collapse; margin-top:10px;}
+th,td{padding:12px;text-align:left;border-bottom:1px solid #ddd;}
+th{background:#4CAF50;color:white;}
+tr:nth-child(even){background:#f9f9f9;}
+tr:hover{background:#e0f7fa;}
+body.dark-mode tr:nth-child(even){background:#2a2a2a;}
+body.dark-mode tr:hover{background:#333;}
+
+/* Fade-in Animasi */
+.fade-in{animation: fadeIn 0.5s ease;}
+@keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
+
+/* Chart */
+canvas{margin-top:20px; background:#fff; border-radius:12px; padding:20px;}
+body.dark-mode canvas{background:#1f1f1f;}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginPage">
+    <div id="loginBox">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Masuk</button>
+    </div>
+</div>
+
+<!-- Dashboard -->
+<div id="app" style="display:none;">
+<header>
+    <h1>Tabungan, Pemasukan & Pengeluaran Bulanan</h1>
+    <button id="toggleMode" onclick="toggleDarkMode()">Mode Gelap</button>
+</header>
+
+<div class="container">
+    <!-- Input -->
+    <div class="card">
+        <h2>Tambah Transaksi</h2>
+        <label for="date">Tanggal:</label>
+        <input type="date" id="date">
+
+        <label for="type">Jenis:</label>
+        <select id="type">
+            <option value="pemasukan">Pemasukan</option>
+            <option value="tabungan">Tabungan</option>
+            <option value="pengeluaran">Pengeluaran</option>
+        </select>
+
+        <label for="amount">Jumlah (Rp):</label>
+        <input type="number" id="amount" placeholder="Masukkan jumlah">
+
+        <button onclick="addTransaction()">Tambah</button>
+    </div>
+
+    <!-- Filter -->
+    <div class="card">
+        <h2>Filter Bulan</h2>
+        <label for="filterMonth">Pilih Bulan:</label>
+        <input type="month" id="filterMonth">
+        <button onclick="applyFilter()">Terapkan Filter</button>
+        <button onclick="exportCSV()">Export CSV</button>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-container">
+        <div class="summary-card income" id="totalIncome">Total Pemasukan: Rp 0</div>
+        <div class="summary-card saving" id="totalSaving">Total Tabungan: Rp 0</div>
+        <div class="summary-card expense" id="totalExpense">Total Pengeluaran: Rp 0</div>
+        <div class="summary-card balance" id="balance">Saldo Akhir: Rp 0</div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+        <h2>Riwayat Bulanan</h2>
+        <table>
+            <thead>
+                <tr><th>Tanggal</th><th>Jenis</th><th>Jumlah (Rp)</th></tr>
+            </thead>
+            <tbody id="transactionTable"></tbody>
+        </table>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+        <h2>Grafik Bulanan</h2>
+        <canvas id="myChart" width="400" height="200"></canvas>
+    </div>
+</div>
+</div>
+
+<script>
+window.onload = function() {
+    let transactions = [];
+    let filteredTransactions = [];
+    let chart;
+
+    // Login
+    window.login = function() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        if(username==='admin' && password==='1234'){
+            document.getElementById('loginPage').style.display='none';
+            document.getElementById('app').style.display='block';
+        } else alert('Username atau password salah!');
+    }
+
+    // Add Transaction
+    window.addTransaction = function(){
+        const date = document.getElementById('date').value;
+        const type = document.getElementById('type').value;
+        const amount = parseInt(document.getElementById('amount').value);
+        if(!date || !amount || amount<=0){ alert('Tanggal dan jumlah harus valid!'); return;}
+        transactions.push({date,type,amount});
+        applyFilter();
+        document.getElementById('date').value='';
+        document.getElementById('amount').value='';
+    }
+
+    // Update Table
+    function updateTable(list){
+        const table = document.getElementById('transactionTable');
+        table.innerHTML='';
+        list.forEach(trx=>{
+            const row = document.createElement('tr');
+            row.classList.add('fade-in');
+            row.innerHTML=`<td>${trx.date}</td><td>${trx.type.charAt(0).toUpperCase()+trx.type.slice(1)}</td><td>${trx.amount.toLocaleString()}</td>`;
+            table.appendChild(row);
+        });
+    }
+
+    // Update Summary
+    function updateSummary(list){
+        let income=0, saving=0, expense=0;
+        list.forEach(trx=>{
+            if(trx.type==='pemasukan') income+=trx.amount;
+            else if(trx.type==='tabungan') saving+=trx.amount;
+            else if(trx.type==='pengeluaran') expense+=trx.amount;
+        });
+
+        document.getElementById('totalIncome').innerText='Total Pemasukan: Rp '+income.toLocaleString();
+        document.getElementById('totalSaving').innerText='Total Tabungan: Rp '+saving.toLocaleString();
+        document.getElementById('totalExpense').innerText='Total Pengeluaran: Rp '+expense.toLocaleString();
+
+        const balance = income - saving - expense;
+        document.getElementById('balance').innerText='Saldo Akhir: Rp '+balance.toLocaleString();
+    }
+
+    // Update Chart
+    function updateChart(list){
+        const labels=[], incomeData=[], savingData=[], expenseData=[], balanceData=[];
+        const grouped={};
+
+        list.forEach(trx=>{
+            if(!grouped[trx.date]) grouped[trx.date]={income:0,saving:0,expense:0};
+            if(trx.type==='pemasukan') grouped[trx.date].income+=trx.amount;
+            else if(trx.type==='tabungan') grouped[trx.date].saving+=trx.amount;
+            else grouped[trx.date].expense+=trx.amount;
+        });
+
+        let cumulativeBalance=0;
+        Object.keys(grouped).sort().forEach(date=>{
+            labels.push(date);
+            incomeData.push(grouped[date].income);
+            savingData.push(grouped[date].saving);
+            expenseData.push(grouped[date].expense);
+            cumulativeBalance += grouped[date].income - grouped[date].saving - grouped[date].expense;
+            balanceData.push(cumulativeBalance);
+        });
+
+        if(chart) chart.destroy();
+        const ctx = document.getElementById('myChart').getContext('2d');
+        chart = new Chart(ctx,{
+            type:'bar',
+            data:{
+                labels:labels,
+                datasets:[
+                    {label:'Pemasukan', data:incomeData, backgroundColor:'blue'},
+                    {label:'Tabungan', data:savingData, backgroundColor:'green'},
+                    {label:'Pengeluaran', data:expenseData, backgroundColor:'red'},
+                    {label:'Saldo Bersih', data:balanceData, type:'line', borderColor:'orange', backgroundColor:'rgba(255,165,0,0.2)', fill:true, yAxisID:'y1'}
+                ]
+            },
+            options:{
+                responsive:true,
+                interaction:{mode:'index', intersect:false},
+                stacked:false,
+                plugins:{legend:{position:'top'}},
+                scales:{
+                    y:{type:'linear', position:'left', beginAtZero:true, title:{display:true,text:'Jumlah (Rp)'}},
+                    y1:{type:'linear', position:'right', beginAtZero:true, grid:{drawOnChartArea:false}, title:{display:true,text:'Saldo Bersih (Rp)'}}
+                }
+            }
+        });
+    }
+
+    // Filter per bulan
+    window.applyFilter = function(){
+        const month = document.getElementById('filterMonth').value;
+        if(month){
+            filteredTransactions = transactions.filter(trx=>trx.date.startsWith(month));
+        } else filteredTransactions = [...transactions];
+        updateTable(filteredTransactions);
+        updateSummary(filteredTransactions);
+        updateChart(filteredTransactions);
+    }
+
+    // Export CSV
+    window.exportCSV = function(){
+        if(filteredTransactions.length===0){alert('Tidak ada transaksi untuk di-export'); return;}
+        let csv='Tanggal,Jenis,Jumlah\n';
+        filteredTransactions.forEach(trx=>{ csv+=`${trx.date},${trx.type},${trx.amount}\n`; });
+        const blob = new Blob([csv],{type:'text/csv'});
+        const link=document.createElement('a');
+        link.href=URL.createObjectURL(blob);
+        link.download='transaksi.csv';
+        link.click();
+    }
+
+    // Dark Mode
+    window.toggleDarkMode = function(){
+        document.body.classList.toggle('dark-mode');
+        document.getElementById('toggleMode').innerText=document.body.classList.contains('dark-mode')?'Mode Terang':'Mode Gelap';
+    }
+}
+</script>
+</body>
+</html>
