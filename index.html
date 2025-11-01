@@ -1,336 +1,286 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tabungan & Pengeluaran</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-/* BODY & DARK MODE */
-body {
-  font-family: 'Segoe UI', sans-serif;
-  margin: 0;
-  padding: 0;
-  background: #f0f0f0;
-  transition: background 0.5s, color 0.5s;
-}
-.dark-mode {
-  background: #121212;
-  color: #eee;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Tabungan</title>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* RESET */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            transition: all 0.3s ease;
+        }
 
-/* LOGIN PAGE */
-#loginPage {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background: linear-gradient(135deg, #6a11cb, #2575fc);
-  background-size: 200% 200%;
-  animation: gradientBG 5s ease infinite alternate;
-}
-@keyframes gradientBG {
-  0% {background-position:0% 50%;}
-  50% {background-position:100% 50%;}
-  100% {background-position:0% 50%;}
-}
-#loginBox {
-  background: rgba(255,255,255,0.95);
-  padding: 40px 30px;
-  border-radius: 15px;
-  box-shadow: 0 15px 25px rgba(0,0,0,0.3);
-  text-align: center;
-  transform: scale(0.9);
-  opacity: 0;
-  animation: popIn 0.6s forwards;
-}
-.dark-mode #loginBox { background: rgba(30,30,30,0.95); }
-@keyframes popIn {
-  to { transform: scale(1); opacity: 1; }
-}
-#loginBox h2 { margin-bottom: 20px; font-size: 24px; color: #333; }
-.dark-mode #loginBox h2 { color: #eee; }
+        body {
+            background-color: #f0f0f0;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-/* INPUT & BUTTON */
-input, select, button {
-  padding: 12px;
-  margin: 8px 0;
-  width: 100%;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-  font-size: 16px;
-  transition: all 0.3s;
-}
-input:focus, select:focus {
-  border-color: #2196F3;
-  box-shadow: 0 0 8px rgba(33, 150, 243, 0.5);
-  outline: none;
-}
-button {
-  cursor: pointer;
-  background: #2196F3;
-  color: #fff;
-  border: none;
-  transition: 0.3s;
-}
-button:hover { background: #1976D2; transform: translateY(-2px); }
+        /* MODE GELAP */
+        body.dark {
+            background-color: #121212;
+            color: #eee;
+        }
 
-/* APP PAGE */
-#app {
-  flex-direction: column;
-  padding: 20px;
-  align-items: flex-start;
-}
-#summary {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-.summary-box {
-  background: #fff;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  min-width: 150px;
-  text-align: center;
-  transition: all 0.5s;
-  transform: translateY(0);
-}
-.summary-box h3 { margin-bottom: 10px; font-size: 18px; color: #333; }
-.summary-box p {
-  font-size: 20px;
-  font-weight: bold;
-  margin: 0;
-  color: #2196F3;
-}
-.summary-box.pop {
-  animation: pop 0.5s forwards;
-}
-@keyframes pop {
-  0% { transform: scale(1); background-color: #fff; }
-  50% { transform: scale(1.2); background-color: #e3f2fd; }
-  100% { transform: scale(1); background-color: #fff; }
-}
-.dark-mode .summary-box {
-  background: #1e1e1e;
-  color: #eee;
-}
-.dark-mode .summary-box p { color: #4fc3f7; }
+        /* LOGIN */
+        .login-container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 300px;
+        }
 
-/* TABLE & ANIMATIONS */
-#transactionTable { width:100%; border-collapse: collapse; margin-top:10px; }
-#transactionTable th, #transactionTable td {
-  border:1px solid #ccc; padding:8px; text-align:center;
-}
-.fade-in { animation: fadeIn 0.5s; }
-@keyframes fadeIn { from{opacity:0} to{opacity:1} }
-#filterMonth { max-width:200px; }
-</style>
+        body.dark .login-container {
+            background: #1e1e1e;
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+
+        .login-container h2 {
+            margin-bottom: 20px;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .login-container input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .login-container button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .login-container button:hover {
+            background-color: #0056b3;
+        }
+
+        /* TABUNGAN */
+        .app-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+            max-width: 800px;
+        }
+
+        .top-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .top-bar button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .form-container input {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 40%;
+        }
+
+        .form-container button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .form-container button:hover {
+            background-color: #218838;
+        }
+
+        #chartContainer {
+            width: 100%;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            animation: slideIn 1s ease-in-out;
+        }
+
+        body.dark #chartContainer {
+            background: #1e1e1e;
+        }
+
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+
+        @keyframes slideIn {
+            from {transform: translateY(50px); opacity: 0;}
+            to {transform: translateY(0); opacity: 1;}
+        }
+    </style>
 </head>
 <body>
+    <!-- LOGIN -->
+    <div class="login-container" id="loginContainer">
+        <h2>Login Tabungan</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+    </div>
 
-<!-- Login Page -->
-<div id="loginPage">
-  <div id="loginBox">
-    <h2>Login</h2>
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="login()">Login</button>
-  </div>
-</div>
+    <!-- APP -->
+    <div class="app-container" id="appContainer">
+        <div class="top-bar">
+            <h2>Selamat Datang, <span id="userDisplay"></span></h2>
+            <div>
+                <button onclick="toggleDarkMode()">Mode Gelap</button>
+                <button onclick="logout()">Logout</button>
+            </div>
+        </div>
 
-<!-- App Page -->
-<div id="app" style="display:none;width:100%;max-width:1000px;">
-  <button id="toggleMode" onclick="toggleDarkMode()">Mode Gelap</button>
+        <div class="form-container">
+            <input type="number" id="pemasukan" placeholder="Pemasukan">
+            <input type="number" id="pengeluaran" placeholder="Pengeluaran">
+            <button onclick="tambahData()">Tambah</button>
+        </div>
 
-  <h2>Tambah Transaksi</h2>
-  <input type="date" id="date" />
-  <select id="type">
-    <option value="pemasukan">Pemasukan</option>
-    <option value="tabungan">Tabungan</option>
-    <option value="pengeluaran">Pengeluaran</option>
-  </select>
-  <input type="number" id="amount" placeholder="Jumlah (Rp)" />
-  <input type="text" id="note" placeholder="Catatan/Keterangan (opsional)" />
-  <button onclick="addTransaction()">Tambah</button>
+        <div id="chartContainer">
+            <canvas id="tabunganChart"></canvas>
+        </div>
+    </div>
 
-  <h2>Ringkasan</h2>
-  <div id="summary">
-    <div class="summary-box" id="totalIncome">Pemasukan: Rp 0</div>
-    <div class="summary-box" id="totalSaving">Tabungan: Rp 0</div>
-    <div class="summary-box" id="totalExpense">Pengeluaran: Rp 0</div>
-    <div class="summary-box" id="balance">Saldo Bersih: Rp 0</div>
-  </div>
+    <script>
+        let dataPemasukan = [];
+        let dataPengeluaran = [];
 
-  <h2>Filter</h2>
-  <input type="month" id="filterMonth" onchange="applyFilter()" />
-  <button onclick="exportCSV()">Export CSV</button>
+        function login() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
 
-  <h2>Riwayat Transaksi</h2>
-  <table id="transactionTable">
-    <thead>
-      <tr><th>Tanggal</th><th>Jenis</th><th>Jumlah</th><th>Catatan</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <h2>Chart</h2>
-  <canvas id="myChart"></canvas>
-</div>
-
-<script>
-window.onload = function() {
-  let transactions = [];
-  let filteredTransactions = [];
-  let chart;
-  let lastIncome = 0, lastSaving = 0, lastExpense = 0, lastBalance = 0;
-
-  // Login
-  window.login = function() {
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    if(username==='admin' && password==='1234'){
-      document.getElementById('loginPage').style.display='none';
-      document.getElementById('app').style.display='block';
-      filteredTransactions = [...transactions];
-      updateTable(filteredTransactions);
-      updateSummary(filteredTransactions);
-      updateChart(filteredTransactions);
-    } else alert('Username atau password salah!');
-  }
-
-  function animateValue(id, start, end, duration = 1000) {
-    const obj = document.getElementById(id);
-    obj.classList.remove('pop');
-    let startTime = null;
-    const step = (timestamp) => {
-      if(!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime)/duration, 1);
-      obj.innerText = obj.id.replace(/([A-Z])/g, ' $1') + ': Rp ' + Math.floor(start + (end-start)*progress).toLocaleString();
-      if(progress < 1) window.requestAnimationFrame(step);
-      else obj.classList.add('pop');
-    }
-    window.requestAnimationFrame(step);
-  }
-
-  // Tambah transaksi
-  window.addTransaction = function() {
-    const date = document.getElementById('date').value;
-    const type = document.getElementById('type').value;
-    const amount = parseInt(document.getElementById('amount').value);
-    const note = document.getElementById('note').value;
-    if(!date || !amount || amount <= 0){ alert('Tanggal dan jumlah harus valid!'); return; }
-    transactions.push({date, type, amount, note});
-    applyFilter();
-    document.getElementById('date').value='';
-    document.getElementById('amount').value='';
-    document.getElementById('note').value='';
-  }
-
-  function updateTable(list){
-    const table = document.getElementById('transactionTable').getElementsByTagName('tbody')[0];
-    table.innerHTML='';
-    list.forEach(trx=>{
-      const row = document.createElement('tr');
-      row.classList.add('fade-in');
-      row.innerHTML=`
-        <td>${trx.date}</td>
-        <td>${trx.type.charAt(0).toUpperCase() + trx.type.slice(1)}</td>
-        <td>${trx.amount.toLocaleString()}</td>
-        <td>${trx.note || '-'}</td>
-      `;
-      table.appendChild(row);
-    });
-  }
-
-  function updateSummary(list){
-    let income=0, saving=0, expense=0;
-    list.forEach(trx=>{
-      if(trx.type==='pemasukan') income+=trx.amount;
-      else if(trx.type==='tabungan') saving+=trx.amount;
-      else if(trx.type==='pengeluaran') expense+=trx.amount;
-    });
-    const balance = income - saving - expense;
-    animateValue('totalIncome', lastIncome, income);
-    animateValue('totalSaving', lastSaving, saving);
-    animateValue('totalExpense', lastExpense, expense);
-    animateValue('balance', lastBalance, balance);
-    lastIncome = income; lastSaving = saving; lastExpense = expense; lastBalance = balance;
-  }
-
-  function updateChart(list){
-    const labels=[], incomeData=[], savingData=[], expenseData=[], balanceData=[];
-    const grouped={};
-    list.forEach(trx=>{
-      if(!grouped[trx.date]) grouped[trx.date]={income:0,saving:0,expense:0};
-      if(trx.type==='pemasukan') grouped[trx.date].income+=trx.amount;
-      else if(trx.type==='tabungan') grouped[trx.date].saving+=trx.amount;
-      else grouped[trx.date].expense+=trx.amount;
-    });
-    let cumulativeBalance=0;
-    Object.keys(grouped).sort().forEach(date=>{
-      labels.push(date);
-      incomeData.push(grouped[date].income);
-      savingData.push(grouped[date].saving);
-      expenseData.push(grouped[date].expense);
-      cumulativeBalance += grouped[date].income - grouped[date].saving - grouped[date].expense;
-      balanceData.push(cumulativeBalance);
-    });
-    if(chart) chart.destroy();
-    const ctx = document.getElementById('myChart').getContext('2d');
-    chart = new Chart(ctx,{
-      type:'bar',
-      data:{
-        labels:labels,
-        datasets:[
-          {label:'Pemasukan', data:incomeData, backgroundColor:'blue'},
-          {label:'Tabungan', data:savingData, backgroundColor:'green'},
-          {label:'Pengeluaran', data:expenseData, backgroundColor:'red'},
-          {label:'Saldo Bersih', data:balanceData, type:'line', borderColor:'orange', backgroundColor:'rgba(255,165,0,0.2)', fill:true, yAxisID:'y1'}
-        ]
-      },
-      options:{
-        responsive:true,
-        interaction:{mode:'index', intersect:false},
-        stacked:false,
-        plugins:{legend:{position:'top'}},
-        scales:{
-          y:{type:'linear', position:'left', beginAtZero:true, title:{display:true,text:'Jumlah (Rp)'}},
-          y1:{type:'linear', position:'right', beginAtZero:true, grid:{drawOnChartArea:false}, title:{display:true,text:'Saldo Bersih (Rp)'}}
+            if(user === "user" && pass === "123") {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'flex';
+                document.getElementById('userDisplay').innerText = user;
+            } else {
+                alert("Username atau Password salah!");
+            }
         }
-      }
-    });
-  }
 
-  window.applyFilter = function(){
-    const month = document.getElementById('filterMonth').value;
-    if(month){
-      filteredTransactions = transactions.filter(trx=>trx.date.startsWith(month));
-    } else filteredTransactions = [...transactions];
-    updateTable(filteredTransactions);
-    updateSummary(filteredTransactions);
-    updateChart(filteredTransactions);
-  }
+        function logout() {
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('appContainer').style.display = 'none';
+            dataPemasukan = [];
+            dataPengeluaran = [];
+            updateChart();
+        }
 
-  window.exportCSV = function(){
-    if(filteredTransactions.length===0){alert('Tidak ada transaksi untuk di-export'); return;}
-    let csv='Tanggal,Jenis,Jumlah,Catatan\n';
-    filteredTransactions.forEach(trx=>{ csv+=`${trx.date},${trx.type},${trx.amount},${trx.note||'-'}\n`; });
-    const blob = new Blob([csv],{type:'text/csv'});
-    const link=document.createElement('a');
-    link.href=URL.createObjectURL(blob);
-    link.download='transaksi.csv';
-    link.click();
-  }
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark');
+        }
 
-  window.toggleDarkMode = function(){
-    document.body.classList.toggle('dark-mode');
-    document.getElementById('toggleMode').innerText=document.body.classList.contains('dark-mode')?'Mode Terang':'Mode Gelap';
-  }
-}
-</script>
+        function tambahData() {
+            const pemasukan = parseFloat(document.getElementById('pemasukan').value) || 0;
+            const pengeluaran = parseFloat(document.getElementById('pengeluaran').value) || 0;
 
+            dataPemasukan.push(pemasukan);
+            dataPengeluaran.push(pengeluaran);
+
+            document.getElementById('pemasukan').value = '';
+            document.getElementById('pengeluaran').value = '';
+
+            updateChart();
+        }
+
+        const ctx = document.getElementById('tabunganChart').getContext('2d');
+        const tabunganChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Pemasukan',
+                        data: dataPemasukan,
+                        borderColor: 'green',
+                        fill: false
+                    },
+                    {
+                        label: 'Pengeluaran',
+                        data: dataPengeluaran,
+                        borderColor: 'red',
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#333'
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: '#333'
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: '#333'
+                        }
+                    }
+                }
+            }
+        });
+
+        function updateChart() {
+            const labels = dataPemasukan.map((_, i) => `Hari ${i + 1}`);
+            tabunganChart.data.labels = labels;
+            tabunganChart.data.datasets[0].data = dataPemasukan;
+            tabunganChart.data.datasets[1].data = dataPengeluaran;
+
+            // Update warna teks untuk mode gelap
+            if(document.body.classList.contains('dark')) {
+                tabunganChart.options.plugins.legend.labels.color = '#eee';
+                tabunganChart.options.scales.x.ticks.color = '#eee';
+                tabunganChart.options.scales.y.ticks.color = '#eee';
+            } else {
+                tabunganChart.options.plugins.legend.labels.color = '#333';
+                tabunganChart.options.scales.x.ticks.color = '#333';
+                tabunganChart.options.scales.y.ticks.color = '#333';
+            }
+
+            tabunganChart.update();
+        }
+    </script>
 </body>
 </html>
