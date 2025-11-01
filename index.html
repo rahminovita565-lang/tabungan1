@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tabungan, Pemasukan & Pengeluaran</title>
+<title>CATATAN FINANSIAL RUMAH TANGGA</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif;}
@@ -49,277 +49,289 @@ canvas{margin-top:20px;background:#fff;border-radius:12px;padding:20px;}
 body.dark-mode canvas{background:#1f1f1f;}
 .receipt-img{width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer;transition:.2s;}
 .receipt-img:hover{transform:scale(1.1);}
+.modal{display:none;position:fixed;z-index:10;left:0;top:0;width:100%;height:100%;overflow:auto;background:rgba(0,0,0,0.8);}
+.modal-content{margin:10% auto;padding:0;display:block;width:80%;max-width:700px;}
+.modal-content img{width:100%;border-radius:8px;}
+.close{position:absolute;top:30px;right:35px;color:#fff;font-size:40px;font-weight:bold;cursor:pointer;}
 </style>
 </head>
 <body>
 
 <!-- Login -->
 <div id="loginPage">
-    <div id="loginBox">
-        <h2>Login</h2>
-        <input type="text" id="username" placeholder="Username">
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="login()">Masuk</button>
-    </div>
+    <div id="loginBox">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Masuk</button>
+    </div>
 </div>
 
 <!-- Dashboard -->
 <div id="app" style="display:none;">
 <header>
-    <h1>Tabungan & Transaksi Bulanan</h1>
-    <button id="toggleMode" onclick="toggleDarkMode()">Mode Gelap</button>
+    <h1>Tabungan & Transaksi Bulanan</h1>
+    <button id="toggleMode" onclick="toggleDarkMode()">Mode Gelap</button>
 </header>
 
 <div class="container">
-    <!-- Input -->
-    <div class="card">
-        <h2>Transaksi Baru</h2>
-        <input type="hidden" id="editIndex">
-        <label for="date">Tanggal:</label>
-        <input type="date" id="date">
+    <div class="card">
+        <h2>Transaksi Baru</h2>
+        <input type="hidden" id="editIndex">
+        <label for="date">Tanggal:</label>
+        <input type="date" id="date">
 
-        <label for="type">Jenis:</label>
-        <select id="type" onchange="showNoteAndImageField()">
-            <option value="pemasukan">Pemasukan</option>
-            <option value="tabungan">Tabungan</option>
-            <option value="pengeluaran">Pengeluaran</option>
-        </select>
+        <label for="type">Jenis:</label>
+        <select id="type" onchange="showNoteAndImageField()">
+            <option value="pemasukan">Pemasukan</option>
+            <option value="tabungan">Tabungan</option>
+            <option value="pengeluaran">Pengeluaran</option>
+        </select>
 
-        <label for="amount">Jumlah (Rp):</label>
-        <input type="number" id="amount" placeholder="Masukkan jumlah">
+        <label for="amount">Jumlah (Rp):</label>
+        <input type="number" id="amount" placeholder="Masukkan jumlah">
 
-        <label for="note" id="noteLabel">Catatan:</label>
-        <input type="text" id="note" placeholder="Catatan transaksi">
+        <label for="note" id="noteLabel">Catatan:</label>
+        <input type="text" id="note" placeholder="Catatan transaksi">
 
-        <label for="receipt" id="receiptLabel" style="display:none;">Bukti (Gambar):</label>
-        <input type="file" id="receipt" accept="image/*" style="display:none;">
+        <label for="receipt" id="receiptLabel" style="display:none;">Bukti (Gambar):</label>
+        <input type="file" id="receipt" accept="image/*" style="display:none;">
 
-        <button onclick="saveTransaction()">Simpan</button>
-    </div>
+        <button onclick="saveTransaction()">Simpan</button>
+    </div>
 
-    <!-- Filter -->
-    <div class="card">
-        <h2>Filter</h2>
-        <label for="startDate">Mulai:</label>
-        <input type="date" id="startDate">
-        <label for="endDate">Sampai:</label>
-        <input type="date" id="endDate">
-        <label for="typeFilter">Jenis:</label>
-        <select id="typeFilter">
-            <option value="">Semua</option>
-            <option value="pemasukan">Pemasukan</option>
-            <option value="tabungan">Tabungan</option>
-            <option value="pengeluaran">Pengeluaran</option>
-        </select>
-        <button onclick="applyFilter()">Terapkan</button>
-        <button onclick="exportCSV()">Export CSV</button>
-        <button onclick="exportJSON()">Export JSON</button>
-    </div>
+    <div class="card">
+        <h2>Filter</h2>
+        <label for="startDate">Mulai:</label>
+        <input type="date" id="startDate">
+        <label for="endDate">Sampai:</label>
+        <input type="date" id="endDate">
+        <label for="typeFilter">Jenis:</label>
+        <select id="typeFilter">
+            <option value="">Semua</option>
+            <option value="pemasukan">Pemasukan</option>
+            <option value="tabungan">Tabungan</option>
+            <option value="pengeluaran">Pengeluaran</option>
+        </select>
+        <button onclick="applyFilter()">Terapkan</button>
+        <button onclick="exportCSV()">Export CSV</button>
+        <button onclick="exportJSON()">Export JSON</button>
+    </div>
 
-    <!-- Summary -->
-    <div class="summary-container">
-        <div class="summary-card income" id="totalIncome">Total Pemasukan: Rp 0</div>
-        <div class="summary-card saving" id="totalSaving">Total Tabungan: Rp 0</div>
-        <div class="summary-card expense" id="totalExpense">Total Pengeluaran: Rp 0</div>
-        <div class="summary-card balance" id="balance">Saldo Akhir: Rp 0</div>
-    </div>
+    <div class="summary-container">
+        <div class="summary-card income" id="totalIncome">Total Pemasukan: Rp 0</div>
+        <div class="summary-card saving" id="totalSaving">Total Tabungan: Rp 0</div>
+        <div class="summary-card expense" id="totalExpense">Total Pengeluaran: Rp 0</div>
+        <div class="summary-card balance" id="balance">Saldo Akhir: Rp 0</div>
+    </div>
 
-    <!-- Table -->
-    <div class="card">
-        <h2>Riwayat</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Tanggal</th>
-                    <th>Jenis</th>
-                    <th>Jumlah</th>
-                    <th>Catatan</th>
-                    <th>Bukti</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="transactionTable"></tbody>
-        </table>
-    </div>
+    <div class="card">
+        <h2>Riwayat</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Jenis</th>
+                    <th>Jumlah</th>
+                    <th>Catatan</th>
+                    <th>Bukti</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="transactionTable"></tbody>
+        </table>
+    </div>
 
-    <!-- Chart -->
-    <div class="card">
-        <h2>Grafik Saldo</h2>
-        <canvas id="myChart" width="400" height="200"></canvas>
-    </div>
+    <div class="card">
+        <h2>Grafik Saldo</h2>
+        <canvas id="myChart"></canvas>
+    </div>
 </div>
+</div>
+
+<!-- Modal Gambar -->
+<div id="modal" class="modal">
+  <span class="close" onclick="closeModal()">&times;</span>
+  <div class="modal-content">
+    <img id="modalImage" src="">
+  </div>
 </div>
 
 <script>
-window.onload=function(){
-    let transactions=[],filteredTransactions=[],chart;
+let transactions = [];
+let filteredTransactions = [];
+let chart = null;
 
-    if(localStorage.getItem('transactions')) transactions=JSON.parse(localStorage.getItem('transactions'));
+// Ambil data dari localStorage
+const saved = localStorage.getItem('transactions');
+if (saved) transactions = JSON.parse(saved);
+applyFilter();
 
-    // Login
-    window.login=function(){
-        const u=document.getElementById('username').value;
-        const p=document.getElementById('password').value;
-        if(u==='admin' && p==='1234'){
-            document.getElementById('loginPage').style.display='none';
-            document.getElementById('app').style.display='block';
-            applyFilter();
-        }else alert('Username atau password salah!');
-    }
-
-    // Show/hide receipt
-    window.showNoteAndImageField=function(){
-        const t=document.getElementById('type').value;
-        const r=document.getElementById('receipt');
-        const rl=document.getElementById('receiptLabel');
-        if(t==='pengeluaran'){r.style.display='block'; rl.style.display='block';}
-        else{r.style.display='none'; rl.style.display='none'; r.value='';}
-    }
-
-    // Save transaction
-    window.saveTransaction=function(){
-        const date=document.getElementById('date').value;
-        const type=document.getElementById('type').value;
-        const amount=Number(document.getElementById('amount').value);
-        const note=document.getElementById('note').value;
-        const receipt=document.getElementById('receipt').files[0]?URL.createObjectURL(document.getElementById('receipt').files[0]):'';
-
-        if(!date || !amount){alert('Tanggal dan jumlah wajib diisi!'); return;}
-        const editIndex=document.getElementById('editIndex').value;
-
-        if(editIndex===''){transactions.push({date,type,amount,note,receipt});}
-        else{
-            transactions[editIndex]={date,type,amount,note,receipt};
-            document.getElementById('editIndex').value='';
-        }
-        localStorage.setItem('transactions',JSON.stringify(transactions));
-        clearForm();
-        applyFilter();
-    }
-
-    function clearForm(){
-        document.getElementById('date').value='';
-        document.getElementById('type').value='pemasukan';
-        document.getElementById('amount').value='';
-        document.getElementById('note').value='';
-        document.getElementById('receipt').value='';
-        showNoteAndImageField();
-    }
-
-    // Edit/Delete
-    window.editTransaction=function(index){
-        const t=filteredTransactions[index];
-        document.getElementById('date').value=t.date;
-        document.getElementById('type').value=t.type;
-        document.getElementById('amount').value=t.amount;
-        document.getElementById('note').value=t.note;
-        document.getElementById('editIndex').value=transactions.indexOf(t);
-        showNoteAndImageField();
-    }
-
-    window.deleteTransaction=function(index){
-        if(confirm('Hapus transaksi ini?')){
-            const t=filteredTransactions[index];
-            transactions.splice(transactions.indexOf(t),1);
-            localStorage.setItem('transactions',JSON.stringify(transactions));
-            applyFilter();
-        }
-    }
-
-    // Filter
-    window.applyFilter=function(){
-        const start=document.getElementById('startDate').value;
-        const end=document.getElementById('endDate').value;
-        const typeFilter=document.getElementById('typeFilter').value;
-
-        filteredTransactions=transactions.filter(t=>{
-            if(start && t.date<start) return false;
-            if(end && t.date>end) return false;
-            if(typeFilter && t.type!==typeFilter) return false;
-            return true;
-        });
-        renderTable();
-        updateSummary();
-        updateChart();
-    }
-
-    function renderTable(){
-        const tbody=document.getElementById('transactionTable');
-        tbody.innerHTML='';
-        filteredTransactions.forEach((t,i)=>{
-            const tr=document.createElement('tr');
-            tr.innerHTML=`
-                <td>${t.date}</td>
-                <td>${t.type}</td>
-                <td>Rp ${t.amount.toLocaleString()}</td>
-                <td>${t.note}</td>
-                <td>${t.receipt?`<img src="${t.receipt}" class="receipt-img" onclick="window.open('${t.receipt}','_blank')">`:'-'}</td>
-                <td>
-                    <button onclick="editTransaction(${i})">Edit</button>
-                    <button onclick="deleteTransaction(${i})">Hapus</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function updateSummary(){
-        let income=0,saving=0,expense=0;
-        filteredTransactions.forEach(t=>{
-            if(t.type==='pemasukan') income+=t.amount;
-            else if(t.type==='tabungan') saving+=t.amount;
-            else if(t.type==='pengeluaran') expense+=t.amount;
-        });
-        document.getElementById('totalIncome').innerText=`Total Pemasukan: Rp ${income.toLocaleString()}`;
-        document.getElementById('totalSaving').innerText=`Total Tabungan: Rp ${saving.toLocaleString()}`;
-        document.getElementById('totalExpense').innerText=`Total Pengeluaran: Rp ${expense.toLocaleString()}`;
-        const balance=income - saving - expense;
-        document.getElementById('balance').innerText=`Saldo Akhir: Rp ${balance.toLocaleString()}`;
-    }
-
-    // Chart
-    function updateChart(){
-        const labels=filteredTransactions.map(t=>t.date);
-        const data=filteredTransactions.map(t=>{
-            if(t.type==='pemasukan') return t.amount;
-            else if(t.type==='tabungan') return -t.amount;
-            else return -t.amount;
-        });
-        if(chart) chart.destroy();
-        const ctx=document.getElementById('myChart').getContext('2d');
-        chart=new Chart(ctx,{
-            type:'line',
-            data:{labels, datasets:[{label:'Saldo',data,cubicInterpolationMode:'monotone',borderColor:'#4CAF50',backgroundColor:'rgba(76,175,80,0.2)',fill:true}]},
-            options:{responsive:true,plugins:{legend:{display:false}}}
-        });
-    }
-
-    // Dark mode
-    window.toggleDarkMode=function(){
-        document.body.classList.toggle('dark-mode');
-    }
-
-    // Export
-    window.exportCSV=function(){
-        let csv='Tanggal,Jenis,Jumlah,Catatan\\n';
-        filteredTransactions.forEach(t=>{
-            csv+=`${t.date},${t.type},${t.amount},${t.note}\\n`;
-        });
-        const blob=new Blob([csv],{type:'text/csv'});
-        const link=document.createElement('a');
-        link.href=URL.createObjectURL(blob);
-        link.download='transaksi.csv';
-        link.click();
-    }
-
-    window.exportJSON=function(){
-        const blob=new Blob([JSON.stringify(filteredTransactions, null, 2)],{type:'application/json'});
-        const link=document.createElement('a');
-        link.href=URL.createObjectURL(blob);
-        link.download='transaksi.json';
-        link.click();
-    }
+function login(){
+    const user = document.getElementById('username').value;
+    const pass = document.getElementById('password').value;
+    if(user==='admin' && pass==='123'){
+        document.getElementById('loginPage').style.display='none';
+        document.getElementById('app').style.display='block';
+        applyFilter();
+    } else alert('Username atau Password salah!');
 }
+
+function toggleDarkMode(){ document.body.classList.toggle('dark-mode'); }
+
+function showNoteAndImageField(){
+    const type = document.getElementById('type').value;
+    const receiptLabel = document.getElementById('receiptLabel');
+    const receiptInput = document.getElementById('receipt');
+    if(type==='pengeluaran'){ receiptLabel.style.display='block'; receiptInput.style.display='block'; }
+    else { receiptLabel.style.display='none'; receiptInput.style.display='none'; }
+}
+
+function saveTransaction(){
+    const date = document.getElementById('date').value;
+    const type = document.getElementById('type').value;
+    const amount = Number(document.getElementById('amount').value);
+    const note = document.getElementById('note').value;
+    const fileInput = document.getElementById('receipt');
+    const editIndex = document.getElementById('editIndex').value;
+
+    if(!date || !amount){ alert('Tanggal dan jumlah wajib diisi'); return; }
+
+    const saveData = (receipt) => {
+        if(editIndex==='') transactions.push({date,type,amount,note,receipt});
+        else transactions[editIndex]={date,type,amount,note,receipt};
+        localStorage.setItem('transactions',JSON.stringify(transactions));
+        document.getElementById('editIndex').value='';
+        clearForm();
+        applyFilter();
+    }
+
+    if(fileInput.files && fileInput.files[0]){
+        const reader = new FileReader();
+        reader.onload = function(e){ saveData(e.target.result); }
+        reader.readAsDataURL(fileInput.files[0]);
+    } else saveData('');
+}
+
+function clearForm(){
+    document.getElementById('date').value='';
+    document.getElementById('type').value='pemasukan';
+    document.getElementById('amount').value='';
+    document.getElementById('note').value='';
+    document.getElementById('receipt').value='';
+    showNoteAndImageField();
+}
+
+function editTransaction(i){
+    const t = filteredTransactions[i];
+    const index = transactions.findIndex(tr=>tr===t);
+    document.getElementById('editIndex').value=index;
+    document.getElementById('date').value=t.date;
+    document.getElementById('type').value=t.type;
+    document.getElementById('amount').value=t.amount;
+    document.getElementById('note').value=t.note;
+    showNoteAndImageField();
+}
+
+function deleteTransaction(i){
+    const t = filteredTransactions[i];
+    const index = transactions.findIndex(tr=>tr===t);
+    if(confirm('Hapus transaksi ini?')){
+        transactions.splice(index,1);
+        localStorage.setItem('transactions',JSON.stringify(transactions));
+        applyFilter();
+    }
+}
+
+function applyFilter(){
+    const start = document.getElementById('startDate').value;
+    const end = document.getElementById('endDate').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    filteredTransactions = transactions.filter(t=>{
+        let pass = true;
+        if(start && t.date<start) pass=false;
+        if(end && t.date>end) pass=false;
+        if(typeFilter && t.type!==typeFilter) pass=false;
+        return pass;
+    });
+    renderTable();
+    updateSummary();
+    updateChart();
+}
+
+function renderTable(){
+    const tbody = document.getElementById('transactionTable');
+    tbody.innerHTML='';
+    filteredTransactions.forEach((t,i)=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+        <td>${t.date}</td>
+        <td>${t.type}</td>
+        <td>Rp ${t.amount.toLocaleString()}</td>
+        <td>${t.note}</td>
+        <td>${t.receipt?`<img src="${t.receipt}" class="receipt-img" onclick="openModal('${t.receipt}')">`:'-'}</td>
+        <td>
+            <button onclick="editTransaction(${i})">Edit</button>
+            <button onclick="deleteTransaction(${i})">Hapus</button>
+        </td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function updateSummary(){
+    let income=0,saving=0,expense=0;
+    filteredTransactions.forEach(t=>{
+        if(t.type==='pemasukan') income+=t.amount;
+        else if(t.type==='tabungan') saving+=t.amount;
+        else if(t.type==='pengeluaran') expense+=t.amount;
+    });
+    document.getElementById('totalIncome').innerText='Total Pemasukan: Rp '+income.toLocaleString();
+    document.getElementById('totalSaving').innerText='Total Tabungan: Rp '+saving.toLocaleString();
+    document.getElementById('totalExpense').innerText='Total Pengeluaran: Rp '+expense.toLocaleString();
+    document.getElementById('balance').innerText='Saldo Akhir: Rp '+(income+saving-expense).toLocaleString();
+}
+
+function updateChart(){
+    if(chart) chart.destroy();
+    const labels = filteredTransactions.map(t=>t.date);
+    let bal=0;
+    const data = filteredTransactions.map(t=>{
+        bal += t.type==='pemasukan'||t.type==='tabungan'? t.amount : -t.amount;
+        return bal;
+    });
+    const ctx=document.getElementById('myChart').getContext('2d');
+    chart = new Chart(ctx,{
+        type:'line',
+        data:{labels,datasets:[{label:'Saldo',data,borderColor:'#4CAF50',backgroundColor:'rgba(76,175,80,0.2)',fill:true}]},
+        options:{responsive:true,plugins:{legend:{display:false}}}
+    });
+}
+
+function exportCSV(){
+    let csv = 'Tanggal,Jenis,Jumlah,Catatan,Bukti\n';
+    filteredTransactions.forEach(t=>{
+        csv += `${t.date},${t.type},${t.amount},${t.note},${t.receipt? '[GAMBAR]' : ''}\n`;
+    });
+    const blob = new Blob([csv],{type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='transactions.csv'; a.click(); URL.revokeObjectURL(url);
+}
+
+function exportJSON(){
+    const dataStr = JSON.stringify(filteredTransactions,null,2);
+    const blob = new Blob([dataStr],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='transactions.json'; a.click(); URL.revokeObjectURL(url);
+}
+
+// Modal Gambar
+function openModal(src){
+    document.getElementById('modalImage').src=src;
+    document.getElementById('modal').style.display='block';
+}
+function closeModal(){ document.getElementById('modal').style.display='none'; }
+window.onclick = function(event){ if(event.target==document.getElementById('modal')) closeModal(); }
 </script>
+
 </body>
 </html>
