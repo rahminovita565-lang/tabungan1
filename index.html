@@ -5,62 +5,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tabungan, Pemasukan & Pengeluaran</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
-* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', sans-serif;}
-body { background:#f0f2f5; transition:0.3s; }
-body.dark-mode { background:#121212; color:#e0e0e0; }
-body.dark-mode .card { background:#1f1f1f; color:#e0e0e0; }
-body.dark-mode table th { background:#2c2c2c; }
-
-/* Login */
-#loginPage { display:flex; justify-content:center; align-items:center; height:100vh; position:relative; }
-#loginPage::before { content:''; position:absolute; width:100%;height:100%; background:url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?fit=crop&w=1350&q=80') center/cover no-repeat; filter:blur(8px) brightness(0.6); z-index:0; }
-#loginBox { position:relative; z-index:1; background: rgba(255,255,255,0.9); padding:40px; border-radius:12px; width:350px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.2);}
-#loginBox input{width:100%; margin-bottom:15px; padding:12px; border-radius:8px; border:1px solid #ccc;}
-#loginBox button{width:100%; padding:12px; border-radius:8px; border:none; background:linear-gradient(45deg,#4CAF50,#81C784); color:white; font-weight:bold; cursor:pointer; transition:0.3s;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif;}
+body{background:#f0f2f5;transition:.3s;}
+body.dark-mode{background:#121212;color:#e0e0e0;}
+body.dark-mode .card{background:#1f1f1f;color:#e0e0e0;}
+body.dark-mode table th{background:#2c2c2c;}
+#loginPage{display:flex;justify-content:center;align-items:center;height:100vh;position:relative;}
+#loginPage::before{content:'';position:absolute;width:100%;height:100%;background:url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?fit=crop&w=1350&q=80') center/cover no-repeat;filter:blur(8px) brightness(0.6);z-index:0;}
+#loginBox{position:relative;z-index:1;background: rgba(255,255,255,0.9);padding:40px;border-radius:12px;width:350px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.2);}
+#loginBox input{width:100%;margin-bottom:15px;padding:12px;border-radius:8px;border:1px solid #ccc;}
+#loginBox button{width:100%;padding:12px;border-radius:8px;border:none;background:linear-gradient(45deg,#4CAF50,#81C784);color:white;font-weight:bold;cursor:pointer;transition:0.3s;}
 #loginBox button:hover{background:linear-gradient(45deg,#388E3C,#66BB6A);}
-
-/* Header */
-header{background:#4CAF50; color:white; padding:20px; text-align:center; position:relative;}
-body.dark-mode header{background:#1f1f1f; color:#e0e0e0;}
-#toggleMode{position:absolute; right:20px; top:20px; padding:6px 12px; font-size:0.9em; background:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:bold; transition:0.3s;}
-body.dark-mode #toggleMode{background:#333; color:#fff;}
-
-/* Container & Card */
-.container{max-width:1000px; margin:30px auto; padding:0 15px;}
-.card{background:white; border-radius:12px; padding:20px; margin-bottom:20px; box-shadow:0 5px 20px rgba(0,0,0,0.1); transition: background 0.3s,color 0.3s;}
+header{background:#4CAF50;color:white;padding:20px;text-align:center;position:relative;}
+body.dark-mode header{background:#1f1f1f;color:#e0e0e0;}
+#toggleMode{position:absolute;right:20px;top:20px;padding:6px 12px;font-size:.9em;background:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold;transition:.3s;}
+body.dark-mode #toggleMode{background:#333;color:#fff;}
+.container{max-width:1000px;margin:30px auto;padding:0 15px;}
+.card{background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 5px 20px rgba(0,0,0,0.1);transition: background .3s,color .3s;}
 body.dark-mode .card{background:#1f1f1f;}
-.card h2{margin-bottom:15px; color:#333;}
-.card label{display:block; margin:10px 0 5px; font-weight:bold;}
-.card input, .card select, .card button{width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; margin-bottom:10px;}
-.card button{background:linear-gradient(45deg,#4CAF50,#81C784); color:white; font-weight:bold; border:none; cursor:pointer; transition:0.3s;}
+.card h2{margin-bottom:15px;color:#333;}
+.card label{display:block;margin:10px 0 5px;font-weight:bold;}
+.card input,.card select,.card button{width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;margin-bottom:10px;}
+.card button{background:linear-gradient(45deg,#4CAF50,#81C784);color:white;font-weight:bold;border:none;cursor:pointer;transition:0.3s;}
 .card button:hover{background:linear-gradient(45deg,#388E3C,#66BB6A);}
-
-/* Summary */
-.summary-container{display:flex; gap:20px; flex-wrap:wrap; margin-top:20px;}
-.summary-card{flex:1; min-width:200px; padding:20px; border-radius:12px; text-align:center; font-weight:bold; color:#2e7d32; background:#e8f5e9; box-shadow:0 5px 15px rgba(0,0,0,0.1); transition:0.3s;}
-.summary-card.income{background:#e8f5e9; color:#2e7d32;}
-.summary-card.expense{background:#ffebee; color:#c62828;}
-.summary-card.saving{background:#fff3e0; color:#ef6c00;}
-.summary-card.balance{background:#e3f2fd; color:#1565c0;}
-body.dark-mode .summary-card{background:#2c2c2c; color:#e0e0e0;}
-
-/* Table */
-table{width:100%; border-collapse:collapse; margin-top:10px;}
+.summary-container{display:flex;gap:20px;flex-wrap:wrap;margin-top:20px;}
+.summary-card{flex:1;min-width:200px;padding:20px;border-radius:12px;text-align:center;font-weight:bold;color:#2e7d32;background:#e8f5e9;box-shadow:0 5px 15px rgba(0,0,0,0.1);transition:.3s;}
+.summary-card.income{background:#e8f5e9;color:#2e7d32;}
+.summary-card.expense{background:#ffebee;color:#c62828;}
+.summary-card.saving{background:#fff3e0;color:#ef6c00;}
+.summary-card.balance{background:#e3f2fd;color:#1565c0;}
+body.dark-mode .summary-card{background:#2c2c2c;color:#e0e0e0;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
 th,td{padding:12px;text-align:left;border-bottom:1px solid #ddd;}
 th{background:#4CAF50;color:white;}
 tr:nth-child(even){background:#f9f9f9;}
 tr:hover{background:#e0f7fa;}
 body.dark-mode tr:nth-child(even){background:#2a2a2a;}
 body.dark-mode tr:hover{background:#333;}
-
-/* Fade-in Animasi */
 .fade-in{animation: fadeIn 0.5s ease;}
 @keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
-
-/* Chart */
-canvas{margin-top:20px; background:#fff; border-radius:12px; padding:20px;}
+canvas{margin-top:20px;background:#fff;border-radius:12px;padding:20px;}
 body.dark-mode canvas{background:#1f1f1f;}
 </style>
 </head>
@@ -91,7 +76,7 @@ body.dark-mode canvas{background:#1f1f1f;}
         <input type="date" id="date">
 
         <label for="type">Jenis:</label>
-        <select id="type">
+        <select id="type" onchange="showNoteField()">
             <option value="pemasukan">Pemasukan</option>
             <option value="tabungan">Tabungan</option>
             <option value="pengeluaran">Pengeluaran</option>
@@ -99,6 +84,9 @@ body.dark-mode canvas{background:#1f1f1f;}
 
         <label for="amount">Jumlah (Rp):</label>
         <input type="number" id="amount" placeholder="Masukkan jumlah">
+
+        <label for="note" id="noteLabel" style="display:none;">Catatan:</label>
+        <input type="text" id="note" placeholder="Catatan pengeluaran" style="display:none;">
 
         <button onclick="addTransaction()">Tambah</button>
     </div>
@@ -125,7 +113,7 @@ body.dark-mode canvas{background:#1f1f1f;}
         <h2>Riwayat Bulanan</h2>
         <table>
             <thead>
-                <tr><th>Tanggal</th><th>Jenis</th><th>Jumlah (Rp)</th></tr>
+                <tr><th>Tanggal</th><th>Jenis</th><th>Jumlah (Rp)</th><th>Catatan</th></tr>
             </thead>
             <tbody id="transactionTable"></tbody>
         </table>
@@ -145,6 +133,10 @@ window.onload = function() {
     let filteredTransactions = [];
     let chart;
 
+    // Load data dari localStorage
+    const savedTransactions = localStorage.getItem('transactions');
+    if(savedTransactions) transactions = JSON.parse(savedTransactions);
+
     // Login
     window.login = function() {
         const username = document.getElementById('username').value;
@@ -152,19 +144,41 @@ window.onload = function() {
         if(username==='admin' && password==='1234'){
             document.getElementById('loginPage').style.display='none';
             document.getElementById('app').style.display='block';
+            applyFilter(); // tampilkan data saat login
         } else alert('Username atau password salah!');
     }
 
-    // Add Transaction
+    // Show/Hide Catatan
+    window.showNoteField = function(){
+        const type = document.getElementById('type').value;
+        const noteInput = document.getElementById('note');
+        const noteLabel = document.getElementById('noteLabel');
+        if(type==='pengeluaran'){
+            noteInput.style.display='block';
+            noteLabel.style.display='block';
+        } else {
+            noteInput.style.display='none';
+            noteLabel.style.display='none';
+        }
+    }
+
+    // Tambah transaksi
     window.addTransaction = function(){
         const date = document.getElementById('date').value;
         const type = document.getElementById('type').value;
         const amount = parseInt(document.getElementById('amount').value);
-        if(!date || !amount || amount<=0){ alert('Tanggal dan jumlah harus valid!'); return;}
-        transactions.push({date,type,amount});
+        const note = document.getElementById('note').value;
+        if(!date || !amount || isNaN(amount) || amount<=0){ alert('Tanggal dan jumlah harus valid!'); return;}
+
+        transactions.push({date,type,amount,note:type==='pengeluaran'?note:''});
+        localStorage.setItem('transactions', JSON.stringify(transactions)); // simpan permanen
         applyFilter();
+
         document.getElementById('date').value='';
         document.getElementById('amount').value='';
+        document.getElementById('note').value='';
+        document.getElementById('note').style.display='none';
+        document.getElementById('noteLabel').style.display='none';
     }
 
     // Update Table
@@ -174,24 +188,22 @@ window.onload = function() {
         list.forEach(trx=>{
             const row = document.createElement('tr');
             row.classList.add('fade-in');
-            row.innerHTML=`<td>${trx.date}</td><td>${trx.type.charAt(0).toUpperCase()+trx.type.slice(1)}</td><td>${trx.amount.toLocaleString()}</td>`;
+            row.innerHTML=`<td>${trx.date}</td><td>${trx.type.charAt(0).toUpperCase()+trx.type.slice(1)}</td><td>${trx.amount.toLocaleString()}</td><td>${trx.note||''}</td>`;
             table.appendChild(row);
         });
     }
 
     // Update Summary
     function updateSummary(list){
-        let income=0, saving=0, expense=0;
+        let income=0,saving=0,expense=0;
         list.forEach(trx=>{
             if(trx.type==='pemasukan') income+=trx.amount;
             else if(trx.type==='tabungan') saving+=trx.amount;
             else if(trx.type==='pengeluaran') expense+=trx.amount;
         });
-
         document.getElementById('totalIncome').innerText='Total Pemasukan: Rp '+income.toLocaleString();
         document.getElementById('totalSaving').innerText='Total Tabungan: Rp '+saving.toLocaleString();
         document.getElementById('totalExpense').innerText='Total Pengeluaran: Rp '+expense.toLocaleString();
-
         const balance = income - saving - expense;
         document.getElementById('balance').innerText='Saldo Akhir: Rp '+balance.toLocaleString();
     }
@@ -200,14 +212,12 @@ window.onload = function() {
     function updateChart(list){
         const labels=[], incomeData=[], savingData=[], expenseData=[], balanceData=[];
         const grouped={};
-
         list.forEach(trx=>{
             if(!grouped[trx.date]) grouped[trx.date]={income:0,saving:0,expense:0};
             if(trx.type==='pemasukan') grouped[trx.date].income+=trx.amount;
             else if(trx.type==='tabungan') grouped[trx.date].saving+=trx.amount;
             else grouped[trx.date].expense+=trx.amount;
         });
-
         let cumulativeBalance=0;
         Object.keys(grouped).sort().forEach(date=>{
             labels.push(date);
@@ -217,38 +227,27 @@ window.onload = function() {
             cumulativeBalance += grouped[date].income - grouped[date].saving - grouped[date].expense;
             balanceData.push(cumulativeBalance);
         });
-
         if(chart) chart.destroy();
-        const ctx = document.getElementById('myChart').getContext('2d');
-        chart = new Chart(ctx,{
-            type:'bar',
+        chart = new Chart(document.getElementById('myChart'),{
+            type:'line',
             data:{
                 labels:labels,
                 datasets:[
-                    {label:'Pemasukan', data:incomeData, backgroundColor:'blue'},
-                    {label:'Tabungan', data:savingData, backgroundColor:'green'},
-                    {label:'Pengeluaran', data:expenseData, backgroundColor:'red'},
-                    {label:'Saldo Bersih', data:balanceData, type:'line', borderColor:'orange', backgroundColor:'rgba(255,165,0,0.2)', fill:true, yAxisID:'y1'}
+                    {label:'Pemasukan',data:incomeData,borderColor:'green',fill:false,tension:0.2},
+                    {label:'Tabungan',data:savingData,borderColor:'orange',fill:false,tension:0.2},
+                    {label:'Pengeluaran',data:expenseData,borderColor:'red',fill:false,tension:0.2},
+                    {label:'Saldo',data:balanceData,borderColor:'blue',fill:false,tension:0.2}
                 ]
             },
-            options:{
-                responsive:true,
-                interaction:{mode:'index', intersect:false},
-                stacked:false,
-                plugins:{legend:{position:'top'}},
-                scales:{
-                    y:{type:'linear', position:'left', beginAtZero:true, title:{display:true,text:'Jumlah (Rp)'}},
-                    y1:{type:'linear', position:'right', beginAtZero:true, grid:{drawOnChartArea:false}, title:{display:true,text:'Saldo Bersih (Rp)'}}
-                }
-            }
+            options:{responsive:true,plugins:{legend:{position:'top'}}}
         });
     }
 
-    // Filter per bulan
+    // Filter Bulanan
     window.applyFilter = function(){
         const month = document.getElementById('filterMonth').value;
         if(month){
-            filteredTransactions = transactions.filter(trx=>trx.date.startsWith(month));
+            filteredTransactions = transactions.filter(trx=> trx.date.startsWith(month));
         } else filteredTransactions = [...transactions];
         updateTable(filteredTransactions);
         updateSummary(filteredTransactions);
@@ -257,20 +256,22 @@ window.onload = function() {
 
     // Export CSV
     window.exportCSV = function(){
-        if(filteredTransactions.length===0){alert('Tidak ada transaksi untuk di-export'); return;}
-        let csv='Tanggal,Jenis,Jumlah\n';
-        filteredTransactions.forEach(trx=>{ csv+=`${trx.date},${trx.type},${trx.amount}\n`; });
+        let csv='Tanggal,Jenis,Jumlah,Catatan\n';
+        filteredTransactions.forEach(trx=>{
+            csv+=`${trx.date},${trx.type},${trx.amount},${trx.note||''}\n`;
+        });
         const blob = new Blob([csv],{type:'text/csv'});
-        const link=document.createElement('a');
-        link.href=URL.createObjectURL(blob);
-        link.download='transaksi.csv';
-        link.click();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href=url;
+        a.download='transaksi.csv';
+        a.click();
+        URL.revokeObjectURL(url);
     }
 
-    // Dark Mode
+    // Dark mode
     window.toggleDarkMode = function(){
         document.body.classList.toggle('dark-mode');
-        document.getElementById('toggleMode').innerText=document.body.classList.contains('dark-mode')?'Mode Terang':'Mode Gelap';
     }
 }
 </script>
